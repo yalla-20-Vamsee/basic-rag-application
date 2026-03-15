@@ -1,42 +1,41 @@
-# This workflow runs every time you push code to GitHub.
-# Claude will review your changed Python files and print feedback.
+# This workflow runs every time you open or update a Pull Request.
+# Claude will review your changed Python files and post feedback as a PR comment.
 
 name: Claude Code Review
 
-# WHEN to run this workflow
 on:
-  push:
-    branches:
-      - main          # runs when you push to main branch
   pull_request:
     branches:
-      - main          # runs when you open a pull request
+      - main
 
-# WHAT to do when it runs
 jobs:
   review:
-    runs-on: ubuntu-latest     # GitHub provides a fresh Linux machine
+    runs-on: ubuntu-latest
+
+    # Give the workflow permission to post comments on PRs
+    permissions:
+      pull-requests: write
+      contents: read
 
     steps:
-      # Step 1: Download your repo code onto the GitHub machine
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2       # fetch last 2 commits so we can see what changed
+          fetch-depth: 2
 
-      # Step 2: Install Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # Step 3: Install the Anthropic SDK
       - name: Install dependencies
-        run: pip install anthropic
+        run: pip install anthropic requests
 
-      # Step 4: Run Claude review on changed Python files
       - name: Run Claude Code Review
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}  # pulled from GitHub Secrets
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        # GitHub provides this automatically
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
         run: |
           python3 .github/scripts/review.py
