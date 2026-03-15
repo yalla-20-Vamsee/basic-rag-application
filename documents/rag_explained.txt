@@ -1,0 +1,35 @@
+Retrieval-Augmented Generation (RAG) is a technique in AI that combines information retrieval with text generation. Instead of relying solely on what a language model learned during training, RAG lets the model look up relevant information from an external knowledge base at query time.
+
+The core problem RAG solves is that large language models have a knowledge cutoff date and cannot know about private or specialized information you have not trained them on. By providing relevant context dynamically, RAG makes models more accurate and up-to-date.
+
+A RAG pipeline has three main stages: ingestion, retrieval, and generation.
+
+In the ingestion stage, your documents are loaded, split into smaller chunks, and converted into numerical vectors called embeddings. These embeddings are stored in a vector database. Chunking is necessary because embedding models have a maximum input size, and smaller chunks also lead to more precise retrieval.
+
+Chunking strategies matter a lot. Fixed-size chunking splits text into equal-sized pieces, often with some overlap so context is not lost at boundaries. Semantic chunking splits text at natural boundaries like sentences or paragraphs. The right chunk size depends on your documents — too small loses context, too large reduces precision.
+
+Embeddings are numerical representations of text that capture semantic meaning. Similar pieces of text will have similar embeddings (close together in vector space). Embedding models like sentence-transformers or OpenAI's text-embedding models convert text into dense vectors of hundreds or thousands of dimensions.
+
+A vector database stores embeddings and supports fast similarity search. When you give it a query vector, it returns the most similar stored vectors. ChromaDB, Pinecone, Weaviate, and FAISS are popular options. ChromaDB is great for local development and small-to-medium datasets.
+
+In the retrieval stage, the user's question is also converted into an embedding using the same model. The vector database then performs a nearest-neighbor search to find the most semantically similar document chunks.
+
+The similarity metric used is usually cosine similarity, which measures the angle between two vectors regardless of their magnitude. A cosine similarity of 1 means identical direction (very similar), while 0 means orthogonal (unrelated).
+
+In the generation stage, the retrieved chunks are assembled into a context string and passed to a large language model alongside the original question. The LLM is instructed to answer based only on the provided context. This grounding reduces hallucinations and keeps answers factual.
+
+The prompt structure for RAG typically looks like: "Here is relevant context: [retrieved chunks]. Based only on this context, answer the following question: [user question]."
+
+RAG has several advantages over fine-tuning a model. It is cheaper — no GPU training required. It is more flexible — you can update the knowledge base without retraining the model. And it is more transparent — you can show users which source documents led to each answer.
+
+Common challenges in RAG include poor retrieval quality (the right documents are not being found), chunking that breaks important context, embedding models that are not suited to your domain, and the generation model ignoring the retrieved context in favor of its parametric knowledge.
+
+Evaluation of RAG systems typically involves measuring retrieval accuracy (did we retrieve relevant documents?) and generation quality (is the answer correct and grounded in the context?). Frameworks like RAGAS provide automated evaluation metrics for RAG pipelines.
+
+Advanced RAG techniques include re-ranking (using a more powerful model to re-score retrieved chunks), HyDE (Hypothetical Document Embeddings, where you generate a hypothetical answer and embed that for retrieval), and query expansion (rewriting the user query to improve retrieval).
+
+Multi-vector retrieval stores multiple embeddings per document chunk — for example, embedding both the full chunk and a summary of it. This can improve recall for queries that match the summary better than the raw text.
+
+Hybrid search combines dense vector search with traditional keyword search (like BM25). This can be more robust because vector search excels at semantic matching while keyword search is reliable for exact terms like product names or technical jargon.
+
+Production RAG systems often include a metadata filtering step, where retrieved chunks are filtered by attributes like date, category, or author before being ranked by similarity. This narrows the search space and improves relevance.

@@ -1,0 +1,39 @@
+Python is a high-level, interpreted programming language known for its simplicity and readability. Created by Guido van Rossum and first released in 1991, Python emphasizes code readability with its use of significant whitespace.
+
+Python supports multiple programming paradigms, including procedural, object-oriented, and functional programming. It has a comprehensive standard library, often described as "batteries included," which means many common tasks can be accomplished without installing third-party packages.
+
+Variables in Python do not need to be declared before use, and their types are inferred automatically. For example, you can write x = 5 and Python knows x is an integer.
+
+Python lists are ordered, mutable collections that can hold items of different types. You create a list like this: my_list = [1, "hello", 3.14]. You can access elements by index, where indexing starts at 0.
+
+Dictionaries in Python are key-value pairs. They are defined using curly braces: my_dict = {"name": "Alice", "age": 30}. Dictionaries are extremely useful for storing structured data.
+
+Python functions are defined using the def keyword. A function can accept parameters and return values. Functions are first-class objects in Python, meaning they can be assigned to variables and passed as arguments.
+
+Classes in Python are defined using the class keyword. Python supports inheritance, encapsulation, and polymorphism. The __init__ method is the constructor that runs when a new object is created.
+
+Python's for loop iterates over any iterable (lists, strings, dictionaries, etc.). The range() function generates a sequence of numbers commonly used in for loops.
+
+List comprehensions provide a concise way to create lists. Instead of a traditional loop, you can write [x * 2 for x in range(10)] to create a list of doubled numbers.
+
+Exception handling in Python uses try, except, else, and finally blocks. Exceptions let you gracefully handle errors without crashing your program.
+
+Python's with statement is used for context management. It is most commonly used with file operations: with open("file.txt") as f: — this automatically closes the file when the block ends.
+
+Virtual environments in Python allow you to create isolated environments for projects. You create one with python -m venv myenv and activate it. This prevents package conflicts between projects.
+
+pip is Python's package manager. You use pip install package_name to install packages and pip freeze > requirements.txt to save your project's dependencies.
+
+Python has strong support for data science and machine learning through libraries like NumPy, pandas, scikit-learn, and TensorFlow. NumPy provides efficient array operations; pandas is for data manipulation and analysis.
+
+Decorators in Python are a way to modify or enhance functions without changing their code. They use the @ symbol. The @staticmethod and @classmethod decorators are common examples in classes.
+
+Generators in Python are a type of iterable, defined like a function but using yield instead of return. They generate values lazily, making them memory-efficient for large datasets.
+
+Python's lambda keyword creates anonymous (unnamed) functions in a single line. For example: double = lambda x: x * 2.
+
+String formatting in Python can be done with f-strings (Python 3.6+): name = "World"; print(f"Hello, {name}!"). F-strings are the most readable and recommended approach.
+
+Python modules are files containing Python code. You import them with the import statement. Packages are directories of modules. The Python Package Index (PyPI) hosts thousands of third-party packages.
+
+Type hints were introduced in Python 3.5 to allow developers to annotate variable and function types. For example: def greet(name: str) -> str: — though Python remains dynamically typed, hints improve readability and enable static analysis tools.
