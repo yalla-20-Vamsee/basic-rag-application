@@ -15,7 +15,6 @@ from dotenv import load_dotenv
 
 load_dotenv()  # reads ANTHROPIC_API_KEY from .env file
 
-# testing PR review
 class RAG:
     def __init__(
         self,
@@ -34,9 +33,11 @@ class RAG:
         self.embed_fn = embedding_functions.DefaultEmbeddingFunction()
 
         # A collection is like a table — it holds your chunks and their embeddings
+        # metadata hnsw:space="cosine" makes similarity = 1 - distance (valid range 0-1)
         self.collection = self.chroma.get_or_create_collection(
             name=collection_name,
             embedding_function=self.embed_fn,
+            metadata={"hnsw:space": "cosine"},
         )
 
         self.docs_dir = docs_dir
@@ -56,6 +57,11 @@ class RAG:
         start = 0
         while start < len(text):
             end = start + chunk_size
+            # Snap to nearest word boundary to avoid cutting words in half
+            if end < len(text):
+                space_idx = text.rfind(" ", start, end)
+                if space_idx > start:
+                    end = space_idx
             chunks.append(text[start:end].strip())
             start += chunk_size - overlap  # step forward, keeping `overlap` chars
         return [c for c in chunks if c]  # drop empty strings
@@ -98,9 +104,14 @@ class RAG:
             ids = [f"{filename}::chunk::{i}" for i in range(len(chunks))]
             metadatas = [{"source": filename, "chunk_index": i} for i in range(len(chunks))]
 
-            # upsert = insert or update (idempotent)
-            # ChromaDB auto-generates embeddings via self.embed_fn
-            self.collection.upsert(documents=chunks, ids=ids, metadatas=metadatas)
+            # upsert in batches of 500 to avoid memory issues with large files
+            BATCH_SIZE = 500
+            for i in range(0, len(chunks), BATCH_SIZE):
+                self.collection.upsert(
+                    documents=chunks[i:i + BATCH_SIZE],
+                    ids=ids[i:i + BATCH_SIZE],
+                    metadatas=metadatas[i:i + BATCH_SIZE],
+                )
 
             print(f"  ✓ {filename}  ({len(chunks)} chunks)")
             total_chunks += len(chunks)
@@ -169,23 +180,30 @@ class RAG:
         context = "\n\n---\n\n".join(context_parts)
 
         # --- Generate ---
-        response = self.claude.messages.create(
-            model="claude-opus-4-6",
-            max_tokens=1024,
-            system=(
-                "You are a helpful assistant. "
-                "Answer the user's question using ONLY the context provided below. "
-                "If the answer is not contained in the context, say "
-                "'I don't have enough information to answer that from the provided documents.' "
-                "Cite the source filename when relevant."
-            ),
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"Context:\n{context}\n\nQuestion: {question}",
-                }
-            ],
-        )
+        try:
+            response = self.claude.messages.create(
+                model="claude-opus-4-6",
+                max_tokens=1024,
+                system=(
+                    "You are a helpful assistant. "
+                    "Answer the user's question using ONLY the context provided below. "
+                    "If the answer is not contained in the context, say "
+                    "'I don't have enough information to answer that from the provided documents.' "
+                    "Cite the source filename when relevant."
+                ),
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Context:\n{context}\n\nQuestion: {question}",
+                    }
+                ],
+            )
+        except anthropic.AuthenticationError:
+            return "Error: Invalid or missing ANTHROPIC_API_KEY. Check your .env file."
+        except anthropic.BadRequestError as e:
+            return f"Error: Bad request to Claude API — {e}"
+        except anthropic.APIError as e:
+            return f"Error calling Claude API: {e}"
 
         return response.content[0].text
 
